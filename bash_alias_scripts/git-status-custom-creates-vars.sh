@@ -33,10 +33,12 @@
 varfile="/Users/$USER/DeveloperScripts/bash_alias_scripts/.git-status-custom-creates-vars-varfile-resource.sh"
 echo "#!/bin/bash -e" > "$varfile" # replaces its existing contents, also use export mode
 
-reminder1=$(echo "(use \"git add <file>...\" to update what will be committed)")
-reminder2=$(echo "(use \"git restore <file>...\" to discard changes in working directory)")
-reminder3=$(echo "(use \"git restore --staged <file>...\" to unstage)")
+# reminder1=$(echo "(use \"git add <file>...\" to update what will be committed)")
+# reminder2=$(echo "(use \"git restore <file>...\" to discard changes in working directory)")
+# reminder3=$(echo "(use \"git restore --staged <file>...\" to unstage)")
 
+reminder=$(echo "(use \"git")
+reminder2=$(echo "no changes added to commit")
 COLOR='\033[1;32m'
 NC='\033[0m' # No Color
 
@@ -44,10 +46,12 @@ varnum=-1
 # ((varnum = varnum + 1))
 # echo $varnum
 
+untrackedFiles=0
+
 git status | while read line ; do
 
 	 # ignore annoying git reminders
-   if [[ "$line" != "$reminder1" && "$line" != "$reminder2" && "$line" != "$reminder3" ]]; then
+   if [[ "$line" != "$reminder"* && "$line" != "$reminder2"* ]]; then
    	
    	# Initial output will be staged files shown in green; when we get to unchanged files,
    	# change the color to red.
@@ -71,7 +75,20 @@ git status | while read line ; do
      spaces=$(echo -n $line | wc -m)
      ((spaces=75-spaces))
      FMT="\t${COLOR}%s%*s\n${NC}"
-     printf $FMT "$line" $spaces "\$g$varnum"
+     printf $FMT "modified: $fileName" $spaces "\$g$varnum"
+    elif [[ "$line" == "Untracked files:"* ]]; then
+      echo "$line"
+      untrackedFiles=1
+    elif [[ "$line" == "" ]]; then
+      # echo "empty line"
+      untrackedFiles=0
+    elif [[ "$untrackedFiles" == 1 ]]; then
+     ((varnum=varnum+1))
+     varline="export g$varnum=\"$line\""
+     echo "$varline" >> "$varfile"
+     spaces=$(echo -n $line | wc -m)
+     ((spaces=64-spaces))
+     printf $FMT "untracked: $line" $spaces "\$g$varnum"
     else
     	FMT="%s\n"
     	printf $FMT "$line"
